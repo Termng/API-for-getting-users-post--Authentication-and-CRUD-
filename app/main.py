@@ -2,7 +2,6 @@ from fastapi import FastAPI, status, HTTPException, Response
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
-from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
@@ -30,55 +29,59 @@ while True:
                 
 
 # PATH OPERATION FOR GETTING ALL POSTS
-@app.get("/posts")
-def get_post():
-    cursor.execute("""SELECT * FROM posts""")
-    posts = cursor.fetchall()
-    return {"message": posts}
 
+@app.get("/posts")
+def get_all_posts():
+    cursor.execute(""" SELECT * from posts""")
+    all_posts = cursor.fetchall()
+    return{"my_output": all_posts}
 
 # PATH OPERATION FOR CREATING POSTS
+
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(newpost: Posts):
-    cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING * """, 
-                   (newpost.title, newpost.content, newpost.published))
-    returnedPost = cursor.fetchone()
+def create_post(postSchema: Posts):
+    cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING *  """, (postSchema.title, postSchema.content, postSchema.published))
+    uploaded_post = cursor.fetchone()
     conn.commit()
-    return{"output": returnedPost}
+    return {"uploaded": uploaded_post}
     
   
 # PATH OPERATION FOR GETTING POSTS BY ID
+
 @app.get("/posts/{id}")
-def get_post(id: int):
-    cursor.execute (""" SELECT * FROM posts WHERE id = %s """, (str(id),))
-    post = cursor.fetchone()
+def get_single_post(id: int):
+    cursor.execute(""" SELECT * FROM posts WHERE id = %s  """, (str(id), ))
+    single_post = cursor.fetchone()
     
-    if not post:
-        print('This was not found')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f' post with {id} was not found')
-    return{"posts detail": post}
+    if not single_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'post with the id: {id} was not found')
+    return{"single": single_post}
 
 
 # PATH OPERATION FOR DELETING POSTS BY ID
-@app.delete("/posts/{id}", status_code = status.HTTP_204_NO_CONTENT)
-def delete_posts(id: int):
-    cursor.execute(""" DELETE FROM posts WHERE id = %s  RETURNING * """ , (str(id), ))
+
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, (str(id), ))
     deleted = cursor.fetchone()
     conn.commit()
-    if deleted == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f" The post with id: {id} does not exist")
-    return Response (status_code=status.HTTP_204_NO_CONTENT)
-
+    if id == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='the post with the id: {id} was not found')
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 # PATH OPERATION FOR UPDATING POSTS BY ID
+
 @app.put("/posts/{id}")
-def update_posts(id: int, post: Posts):
-    cursor.execute (""" UPDATE posts set title = %s, content = %s, is_published = %s WHERE id = %s  RETURNING * """, (post.title, post.content, post.published, str(id), ))
-    updated_post = cursor.fetchone()
+def update_post(posts: Posts, id: int):
+    cursor.execute(""" UPDATE posts SET title = %s, content = %s, is_published = %s WHERE id = %s RETURNING * """, (posts.title, posts.content, posts.published, str(id), ) )
+    updated = cursor.fetchone()
     conn.commit()
-    if updated_post == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f" The post with id: {id} does not exist")
-    return {"message": updated_post}
+    if updated == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"the post with the id: {id} was not found")
+    return{"updated_Post": updated}
+
+
+
 
 
 
