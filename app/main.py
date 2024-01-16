@@ -1,10 +1,20 @@
-from fastapi import FastAPI, status, HTTPException, Response
+from fastapi import FastAPI, status, HTTPException, Response, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+
+models.Base.metadata.create_all(bind=engine)
+
+
+
+
 
 
 app = FastAPI()
@@ -30,20 +40,30 @@ while True:
 
 # PATH OPERATION FOR GETTING ALL POSTS
 
+
+
 @app.get("/posts")
-def get_all_posts():
-    cursor.execute(""" SELECT * from posts""")
-    all_posts = cursor.fetchall()
-    return{"my_output": all_posts}
+def get_all_posts(db: Session = Depends(get_db)):
+    get_posts = db.query(models.Post).all()
+    # cursor.execute(""" SELECT * from posts""")
+    # all_posts = cursor.fetchall()
+    return{"my_output": get_posts}
 
 # PATH OPERATION FOR CREATING POSTS
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(postSchema: Posts):
-    cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING *  """, (postSchema.title, postSchema.content, postSchema.published))
-    uploaded_post = cursor.fetchone()
-    conn.commit()
+def create_post(postSchema: Posts, db: Session = Depends(get_db)):
+    
+    uploaded_post = models.Post(post = postSchema.title, content = postSchema.content, is_published = postSchema.published)
+    
+    db.add(uploaded_post)
+    db.commit()
+    db.refresh(uploaded_post)
     return {"uploaded": uploaded_post}
+
+    # cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING *  """, (postSchema.title, postSchema.content, postSchema.published))
+    # uploaded_post = cursor.fetchone()
+    # conn.commit()
     
   
 # PATH OPERATION FOR GETTING POSTS BY ID
