@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, PastDatetime
 
 
 class PostBase(BaseModel):
@@ -19,5 +19,28 @@ class PostResponse(BaseModel):
     
     class Config:
         orm_mode = True
+        
+# USER SCHEMAS DEFINED BELOW
+class CreateUser(BaseModel):
+    email: EmailStr
+    password: str
+    
+class GetUser(BaseModel):
+    email: str
+    created_at: PastDatetime
+    
+    
+class UserResponse(BaseModel):
+    id: int
+    email: EmailStr
+    
+    
+    class Config:
+        orm_mode = True
+
+
+class Authenticate(BaseModel):
+    email: EmailStr
+    password: str
     
   
