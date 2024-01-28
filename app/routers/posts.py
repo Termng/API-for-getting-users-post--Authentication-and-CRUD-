@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
-from typing import Optional,List
-from .. import models, schemas
+from typing import List
+from .. import models, schemas, oauth2
 from sqlalchemy.orm import Session
 from ..database import engine, get_db
 
@@ -20,7 +20,7 @@ def get_all_posts(db: Session = Depends(get_db)):
 # PATH OPERATION FOR CREATING POSTS
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db)):
+def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
     create_posts = models.Post(**pyPosts.model_dump())
     db.add(create_posts)
     db.commit()
@@ -49,7 +49,7 @@ def get_single_post(id: int, db: Session = Depends(get_db)):
 # PATH OPERATION FOR DELETING POSTS BY ID
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
     deleted = db.query(models.Post).filter(models.Post.id == id)
     # cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, (str(id), ))
     # deleted = cursor.fetchone()
@@ -66,7 +66,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 @router.put("/{id}", response_model=schemas.PostResponse
          )
-def update_post(up_posts: schemas.PostUpdate, id: int, db : Session = Depends(get_db)):
+def update_post(up_posts: schemas.PostUpdate, id: int, db : Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
     updated = db.query(models.Post).filter(models.Post.id == id)
     post = updated.first()
     

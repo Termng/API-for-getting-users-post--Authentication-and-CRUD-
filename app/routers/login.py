@@ -12,10 +12,10 @@ def login_user(user_cred: OAuth2PasswordRequestForm = Depends(), db: Session = D
     user = db.query(models.User).filter(models.User.email == user_cred.username).first()   #make sure to pass username into this or it won't work
     
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Invalid Credentials')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Invalid Credentials')
     
     if not utils.validate_user(user_cred.password, user.password):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Invalid Credentials')
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Invalid Credentials')
     
     # this configures the jwt token
     access_token = oauth2.create_token(data = {"user_id": user.id})

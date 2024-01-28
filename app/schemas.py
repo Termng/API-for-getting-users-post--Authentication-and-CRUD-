@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr, PastDatetime
+from typing import Optional
 
 
 class PostBase(BaseModel):
@@ -43,4 +44,11 @@ class Authenticate(BaseModel):
     email: EmailStr
     password: str
     
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: Optional[int] = None
+      
   
