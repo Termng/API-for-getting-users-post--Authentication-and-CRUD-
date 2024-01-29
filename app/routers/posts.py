@@ -20,10 +20,11 @@ def get_all_posts(db: Session = Depends(get_db)):
 # PATH OPERATION FOR CREATING POSTS
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
-def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
-    create_posts = models.Post(**pyPosts.model_dump())
+def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
+    create_posts = models.Post(user_id = current_user.id ,**pyPosts.model_dump())
+    print(current_user)
     db.add(create_posts)
-    db.commit()
+    db.commit() 
     db.refresh(create_posts)
     return create_posts
     # cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING *  """, (postSchema.title, postSchema.content, postSchema.published))
@@ -49,7 +50,7 @@ def get_single_post(id: int, db: Session = Depends(get_db)):
 # PATH OPERATION FOR DELETING POSTS BY ID
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
+def delete_post(id: int, db: Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
     deleted = db.query(models.Post).filter(models.Post.id == id)
     # cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, (str(id), ))
     # deleted = cursor.fetchone()
@@ -66,7 +67,7 @@ def delete_post(id: int, db: Session = Depends(get_db), user_id: int= Depends(oa
 
 @router.put("/{id}", response_model=schemas.PostResponse
          )
-def update_post(up_posts: schemas.PostUpdate, id: int, db : Session = Depends(get_db), user_id: int= Depends(oauth2.get_current_user)):
+def update_post(up_posts: schemas.PostUpdate, id: int, db : Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
     updated = db.query(models.Post).filter(models.Post.id == id)
     post = updated.first()
     

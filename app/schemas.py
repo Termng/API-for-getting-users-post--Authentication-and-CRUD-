@@ -17,6 +17,8 @@ class PostResponse(BaseModel):
     post: str
     content: str
     is_published: bool
+    user_id: int
+    created_at : PastDatetime
     
     class Config:
         orm_mode = True
