@@ -1,5 +1,5 @@
 from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
-from typing import List
+from typing import List, Optional
 from .. import models, schemas, oauth2
 from sqlalchemy.orm import Session
 from ..database import engine, get_db
@@ -11,10 +11,9 @@ router = APIRouter(
 
 
 @router.get("/", response_model= List[schemas.PostResponse]) #the response model has to be defined with a list so it doesnt throw an error
-def get_all_posts(db: Session = Depends(get_db)):
-    get_posts = db.query(models.Post).all()
-    # cursor.execute(""" SELECT * from posts""")
-    # all_posts = cursor.fetchall()
+def get_all_posts(db: Session = Depends(get_db), limit: int = 10, skip: int = 0, search: Optional[str] = " " ):
+    get_posts = db.query(models.Post).filter(models.Post.post.contains(search)).limit(limit).offset(skip).all() #limit & skip here are query parameter
+    
     return get_posts
 
 # PATH OPERATION FOR CREATING POSTS
@@ -27,20 +26,17 @@ def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), cur
     db.commit() 
     db.refresh(create_posts)
     return create_posts
-    # cursor.execute(""" INSERT INTO posts (title, content, is_published) VALUES (%s, %s, %s) RETURNING *  """, (postSchema.title, postSchema.content, postSchema.published))
-    # uploaded_post = cursor.fetchone()
-    # conn.commit()
+    
     
 
   
 # PATH OPERATION FOR GETTING POSTS BY ID
 
 @router.get("/{id}", response_model=schemas.PostResponse)
-def get_single_post(id: int, db: Session = Depends(get_db)):
-    get_one_post = db.query(models.Post).filter(models.Post.id == id).first()
+def get_single_post(id: int, db: Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
+    get_one_post = db.query(models.Post).filter(models.Post.id == current_user.id).all()
     
-    # cursor.execute(""" SELECT * FROM posts WHERE id = %s  """, (str(id), ))
-    # single_post = cursor.fetchone()
+    
     
     if not get_one_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'post with the id: {id} was not found')
@@ -51,13 +47,15 @@ def get_single_post(id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
-    deleted = db.query(models.Post).filter(models.Post.id == id)
-    # cursor.execute(""" DELETE FROM posts WHERE id = %s RETURNING * """, (str(id), ))
-    # deleted = cursor.fetchone()
-    # conn.commit()
-    if deleted.first() == None:
+    delete_query = db.query(models.Post).filter(models.Post.id == id)
+    
+    post = delete_query.first()
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='the post with the id: {id} was not found')
-    deleted.delete(synchronize_session=False)
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
+    
+    delete_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
@@ -65,17 +63,18 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int= Depen
 
 # PATH OPERATION FOR UPDATING POSTS BY ID
 
-@router.put("/{id}", response_model=schemas.PostResponse
-         )
+@router.put("/{id}", response_model=schemas.PostResponse)
 def update_post(up_posts: schemas.PostUpdate, id: int, db : Session = Depends(get_db), current_user: int= Depends(oauth2.get_current_user)):
     updated = db.query(models.Post).filter(models.Post.id == id)
     post = updated.first()
     
-    # cursor.execute(""" UPDATE posts SET title = %s, content = %s, is_published = %s WHERE id = %s RETURNING * """, (posts.title, posts.content, posts.published, str(id), ) )
-    # updated = cursor.fetchone()
-    # conn.commit()
+    
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"the post with the id: {id} was not found")
+    
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
     updated.update(up_posts.model_dump(), synchronize_session=False)
+    
     db.commit()
     return updated.first()

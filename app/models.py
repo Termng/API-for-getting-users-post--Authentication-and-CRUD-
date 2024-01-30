@@ -14,6 +14,8 @@ class Post(Base):
     is_published =Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user= relationship("User")
+    
     
 class User(Base):
     __tablename__ = 'user'
