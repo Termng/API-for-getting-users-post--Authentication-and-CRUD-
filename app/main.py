@@ -6,6 +6,7 @@ from . import models, schemas
 from .database import engine
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
+from .config import settings
 
 from .routers import login, posts, users
 
