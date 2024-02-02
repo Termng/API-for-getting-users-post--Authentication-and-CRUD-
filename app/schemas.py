@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, PastDatetime
+from pydantic import BaseModel, EmailStr, PastDatetime, conint
 from typing import Optional
 
 
@@ -59,5 +59,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+    
+
+
+# This is the schema for votes
+class Votes(BaseModel):
+    post_id: int
+    dir: conint(le=1)
       
   
