@@ -63,7 +63,7 @@ class TokenData(BaseModel):
 
 
 # This is the schema for votes
-class Votes(BaseModel):
+class Vote(BaseModel):
     post_id: int
     dir: conint(le=1)
       

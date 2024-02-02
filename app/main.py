@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from .config import settings
 
-from .routers import login, posts, users
+from .routers import login, posts, users, votes
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -33,3 +33,4 @@ while True:
 app.include_router(posts.router)
 app.include_router(users.router)
 app.include_router(login.router)
+app.include_router(votes.router)
