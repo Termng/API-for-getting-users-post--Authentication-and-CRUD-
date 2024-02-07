@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
+from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from typing import List, Optional
 from .. import models, schemas, oauth2
 from sqlalchemy.orm import Session
@@ -16,6 +16,9 @@ def get_all_posts(db: Session = Depends(get_db), limit: int = 10, skip: int = 0,
     
     return get_posts
 
+
+    
+
 # PATH OPERATION FOR CREATING POSTS
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
@@ -26,7 +29,7 @@ def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), cur
     db.commit() 
     db.refresh(create_posts)
     return create_posts
-    
+
     
 
   
