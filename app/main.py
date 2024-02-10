@@ -13,7 +13,7 @@ from .routers import login, posts, users, votes
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-# models.Base.metadata.create_all(bind=engine) 
+models.Base.metadata.create_all(bind=engine) 
 
 app = FastAPI()
 
