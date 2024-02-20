@@ -18,7 +18,11 @@ from .routers import login, posts, users, votes
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # models.Base.metadata.create_all(bind=engine) 
 
-app = FastAPI()
+app = FastAPI(
+    title="Content Flow API",
+    description="A simple publishing platform that allows users to upload posts on any topic",
+    docs_url="/"
+)
 
 origins = ["*"]
 
