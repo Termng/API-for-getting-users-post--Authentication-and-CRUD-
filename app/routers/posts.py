@@ -27,7 +27,7 @@ def create_posts(pyPosts: schemas.PostCreate, db: Session = Depends(get_db), cur
     print(current_user)
     db.add(create_posts)
     db.commit() 
-    db.refresh(create_posts)
+    db.refresh(create_posts) 
     return create_posts
 
     
